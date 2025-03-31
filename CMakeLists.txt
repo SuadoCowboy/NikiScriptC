@@ -35,6 +35,9 @@ else()
 	target_compile_definitions(NikiScript PRIVATE ${NIKISCRIPT_COMPILE_DEFINITIONS})
 endif()
 
-target_include_directories(NikiScript PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(NikiScript PRIVATE ${PROJECT_SOURCE_DIR}/include)
+
+target_link_directories(NikiScript PRIVATE ${PROJECT_SOURCE_DIR}/lib)
+target_link_libraries(NikiScript PRIVATE sds)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/example)
