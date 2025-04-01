@@ -11,7 +11,7 @@ void ns::clearStatementData(Context& ctx) {
 	ctx.args.arguments.clear();
 }
 
-bool ns::canRunVariable(Context& ctx) {
+uint8_t ns::canRunVariable(Context& ctx) {
 	switch (ctx.pLexer->token.value[0]) {
 	case NIKISCRIPT_TOGGLE_ON: {
 		ConsoleVariables::pointer pVarPair = &*ctx.consoleVariables.find(ctx.pLexer->token.value);
@@ -124,7 +124,7 @@ void ns::handleCommandCall(Context& ctx, ProgramVariable*& pProgramVar) {
 	clearStatementData(ctx);
 }
 
-uint8_t ns::handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, bool printError) {
+uint8_t ns::handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, uint8_t printError) {
 	if (ctx.pLexer->token.value.empty()) {
 		ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
 		return 1;
@@ -156,7 +156,7 @@ uint8_t ns::handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, b
 	return false;
 }
 
-void ns::handleArgumentToken(Context& ctx, bool printError) {
+void ns::handleArgumentToken(Context& ctx, uint8_t printError) {
 	insertReferencesInToken(ctx, ctx.pLexer->token);
 
 	if (ctx.pLexer->token.value.empty())
@@ -229,7 +229,7 @@ void ns::handleArgumentToken(Context& ctx, bool printError) {
 	ctx.args.arguments.push_back(ctx.pLexer->token.value);
 }
 
-void ns::handleConsoleVariableCall(Context& ctx, ProgramVariable*& pProgramVar, bool printError) {
+void ns::handleConsoleVariableCall(Context& ctx, ProgramVariable*& pProgramVar, uint8_t printError) {
 	Lexer* pOriginalLexer = ctx.pLexer;
 
 	std::vector<Lexer> tempLexers;
@@ -302,7 +302,7 @@ void ns::updateLoopVariables(Context& ctx) {
 	ctx.origin &= ~(OriginType::VARIABLE|OriginType::VARIABLE_LOOP);
 }
 
-void ns::parse(Context& ctx, bool printError) {
+void ns::parse(Context& ctx, uint8_t printError) {
 	if (ctx.pLexer == nullptr)
 		return;
 
@@ -340,7 +340,7 @@ void ns::parse(Context& ctx, bool printError) {
 	handleCommandCall(ctx, pProgramVar);
 }
 
-bool ns::parseFile(Context& ctx, const char* filePath, bool printError) {
+uint8_t ns::parseFile(Context& ctx, const char* filePath, uint8_t printError) {
 	std::ifstream file{filePath};
 
 	if (!file) {
@@ -349,7 +349,7 @@ bool ns::parseFile(Context& ctx, const char* filePath, bool printError) {
 		return false;
 	}
 
-	bool runningFromAnotherFile = (ctx.origin & OriginType::FILE);
+	uint8_t runningFromAnotherFile = (ctx.origin & OriginType::FILE);
 	ctx.origin |= OriginType::FILE;
 
 	std::string originalFilePath = ctx.filePath;

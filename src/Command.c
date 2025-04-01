@@ -1,21 +1,16 @@
 #include "Command.h"
 
-#include <sstream>
-#include <cassert>
+#include <assert.h>
 
 #include "PrintCallback.h"
 
-ns::Command::Command() {}
-
-ns::Command::Command(const std::string_view& name, unsigned char minArgs, unsigned char maxArgs,
-	CommandCallback callback, const std::string_view& description, const std::vector<std::string_view>& argsDescriptions)
-	: name(name), minArgs(minArgs), maxArgs(maxArgs), callback(callback), description(description), argsDescriptions(argsDescriptions) {
+nikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, unsigned char maxArgs, nikiCommandCallback callback, const sds description, const sds* pArgsDescriptions) {
 	assert(!name.empty());
 	assert(minArgs <= maxArgs);
 	assert(argsDescriptions.size() % 2 == 0);
 	assert(argsDescriptions.size() / 2 == maxArgs);
 
-	bool isName = true;
+	uint8_t isName = true;
 	for (uint8_t i = 0; i < argsDescriptions.size(); ++i) {
 		const std::string_view& arg = argsDescriptions[i];
 
@@ -38,7 +33,7 @@ std::string ns::Command::getArgumentsNames() {
 		return "";
 
 	std::stringstream oss{};
-	bool isName = true;
+	uint8_t isName = true;
 
 	for (uint64_t i = 0; i < argsDescriptions.size(); ++i) {
 		if (isName)
@@ -56,7 +51,7 @@ std::string ns::Command::getArgumentsNames() {
 void ns::Command::printAsDataTree() {
 	std::stringstream descriptions{};
 	std::stringstream usage{};
-	bool isName = true;
+	uint8_t isName = true;
 
 	usage << "- Usage: " << name << ' ';
 	descriptions << "- Description: " << description << "\n- Arguments:\n";

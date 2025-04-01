@@ -1,27 +1,32 @@
 #pragma once
 
-#include <unordered_map>
-#include <string_view>
+#include <stdint.h>
+
+#include <sds.h>
 
 #include "DLLExport.h"
 #include "Command.h"
 
-namespace ns {
-	struct Context;
+struct NikiContext;
 
-	struct NIKIAPI CommandHandler {
-		std::unordered_map<std::string_view, Command> commands;
+#ifndef NIKISCRIPT_COMMANDS_SIZE_TYPE
+#define NIKISCRIPT_COMMANDS_SIZE_TYPE uint32_t
+#endif
 
-		Command* get(const std::string_view& name);
-		/**
-		 * @brief adds command to commands unordered_map
-		 * 
-		 * @param command name of the will be mapped in the commands variable
-		 * @return true if command name is okay
-		 * @return false if command with this name already exists
-		 */
-		bool add(const Command& command);
+// TODO: FASTEST search case for commands(maybe hash map but research is better to be sure)
+typedef struct {
+	NikiCommand* pCommands;
+	NIKISCRIPT_COMMANDS_SIZE_TYPE size;
+} NikiCommands;
 
-		void remove(const std::string_view& name, Context& ctx);
-	};
-}
+NikiCommand* nikiGetCommand(const NikiCommands* pCommands, sds name);
+
+/**
+ * @brief adds command to commands unordered_map
+ * @param command name of the will be mapped in the commands variable
+ * @return true if command name is okay
+ * @return 0 if command with this name already exists
+ */
+uint8_t nikiAddCommand(NikiCommands* pCommands, const NikiCommand* pCommand);
+
+void nikiRemoveCommand(NikiCommands* pCommands, const NikiCommand* pCommand);

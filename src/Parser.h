@@ -31,7 +31,7 @@ namespace ns {
 	 * @see ns::parse
 	 * @see ns::handleIdentifierToken
 	 */
-	NIKIAPI bool canRunVariable(Context& ctx);
+	NIKIAPI uint8_t canRunVariable(Context& ctx);
 
 	/**
 	 * @brief Called in parse function when EOS or END is reached
@@ -52,14 +52,14 @@ namespace ns {
 	 * @see ns::parse
 	 * @see ns::canRunVariable
 	 */
-	NIKIAPI uint8_t handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, bool printError);
+	NIKIAPI uint8_t handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, uint8_t printError);
 
 	/**
 	 * @brief Handles references in the string and checks if the parameter matches the argument type
 	 * @note Possible argument types: s = string, i = integer, d = decimal, v = variable
 	 * @see ns::parse
 	 */
-	NIKIAPI void handleArgumentToken(Context& ctx, bool printError);
+	NIKIAPI void handleArgumentToken(Context& ctx, uint8_t printError);
 
 	/**
 	 * @brief Called in parse function when an ConsoleVariable is passed as a IDENTIFIER
@@ -68,7 +68,7 @@ namespace ns {
 	 * @param ctx
 	 * @param pProgramVar
 	 */
-	NIKIAPI void handleConsoleVariableCall(Context& ctx, ProgramVariable*& pProgramVar, bool printError);
+	NIKIAPI void handleConsoleVariableCall(Context& ctx, ProgramVariable*& pProgramVar, uint8_t printError);
 
 	/**
 	 * @brief if a loop variable is active, its script is ran here
@@ -80,7 +80,7 @@ namespace ns {
 	 * @brief Parses and interpret scripts: handles commands and variables as well as their arguments
 	 * @param ctx
 	 */
-	NIKIAPI void parse(Context& ctx, bool printError=true);
+	NIKIAPI void parse(Context& ctx, uint8_t printError=true);
 
-	NIKIAPI bool parseFile(Context& ctx, const char* filePath, bool printError);
+	NIKIAPI uint8_t parseFile(Context& ctx, const char* filePath, uint8_t printError);
 }

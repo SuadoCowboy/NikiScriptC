@@ -60,7 +60,7 @@ static void test_command(ns::Context& ctx) {
 	ns::parse(copy);
 }
 
-bool running = false;
+uint8_t running = false;
 static void quit_command(ns::Context&) {
 	running = false;
 }

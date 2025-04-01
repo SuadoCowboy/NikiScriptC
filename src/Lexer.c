@@ -125,7 +125,7 @@ uint64_t ns::Lexer::setTokenValue() {
 
 			uint64_t tempIndex = nextTokenPosition+2;
 			
-			bool foundCloseReference = false;
+			uint8_t foundCloseReference = false;
 			for (; tempIndex < input.size() && !isSpaceNotNewline(input[tempIndex]); ++tempIndex) {
 				if (input[tempIndex] == NIKISCRIPT_REFERENCE_CLOSE) {
 					++tempIndex;

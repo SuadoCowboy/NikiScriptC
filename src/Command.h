@@ -1,45 +1,38 @@
 #pragma once
 
-#include <vector>
-#include <string_view>
-#include <string>
+#include <sds.h>
 
 #include "DLLExport.h"
 
-namespace ns {
-	struct Context;
+struct NikiContext;
 
-	typedef void(*CommandCallback)(Context& ctx);
+typedef void(*nikiCommandCallback)(struct NikiContext* pCtx);
 
-	struct NIKIAPI Command {
-		std::string_view name;
-		unsigned char minArgs = 0, maxArgs = 0;
-		CommandCallback callback = nullptr;
-		std::string_view description;
+typedef struct NIKIAPI {
+	sds name;
+	unsigned char minArgs, maxArgs;
+	nikiCommandCallback callback;
+	sds description;
 
-		/**
-		 * @note odd = name
-		 * @note even = description
-		 */
-		std::vector<std::string_view> argsDescriptions{};
+	/**
+	 * @note odd = name
+	 * @note even = description
+	 */
+	sds* pArgsDescriptions;
+} NikiCommand;
 
-		Command();
-		/**
-		 * @param name
-		 * @param minArgs
-		 * @param maxArgs
-		 * @param callback
-		 * @param description Command description
-		 * @param argsDescriptions Arguments description. Should have 2 strings for each argument, where the first one is argument name and the second is argument description.
-		 * @see ns::registerCommands for code example
-		 */
-		Command(const std::string_view& name, unsigned char minArgs, unsigned char maxArgs, CommandCallback callback, const std::string_view& description, const std::vector<std::string_view>& argsDescriptions);
-	
-		std::string getArgumentsNames();
+/**
+ * @param name
+ * @param minArgs
+ * @param maxArgs
+ * @param callback
+ * @param description Command description
+ * @param pArgsDescriptions Arguments description. Should have 2 strings for each argument, where the first one is argument name and the second is argument description.
+ * @see nikiRegisterCommands for code example
+ */
+nikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, unsigned char maxArgs, nikiCommandCallback callback, const sds description, const sds* pArgsDescriptions);
 
-		/**
-		 * @brief prints usage, description and argsDescriptions all like a data tree
-		 */
-		void printAsDataTree();
-	};
-}
+/**
+ * @brief prints usage, description and argsDescriptions all like a data tree
+ */
+void nikiCommand_printAsDataTree(const NikiCommand* pCommand);

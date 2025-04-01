@@ -6,7 +6,7 @@ ns::Command* ns::CommandHandler::get(const std::string_view& name) {
 	return commands.count(name) == 0? nullptr : &commands[name];
 }
 
-bool ns::CommandHandler::add(const Command& command) {
+uint8_t ns::CommandHandler::add(const Command& command) {
 	if (commands.count(command.name) != 0)
 		return false;
 

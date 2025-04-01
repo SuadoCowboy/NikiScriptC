@@ -21,6 +21,6 @@ void ns::trim(std::string& s) {
 	rtrim(s);
 }
 
-bool ns::isSpaceNotNewline(char c) {
+uint8_t ns::isSpaceNotNewline(char c) {
 	return isspace(c) && c != '\n';
 }
