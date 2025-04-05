@@ -9,14 +9,14 @@
 
 struct NikiContext;
 
-#ifndef NIKISCRIPT_COMMANDS_SIZE_TYPE
-#define NIKISCRIPT_COMMANDS_SIZE_TYPE uint32_t
+#ifndef NIKI_COMMANDS_SIZE_TYPE
+#define NIKI_COMMANDS_SIZE_TYPE uint32_t
 #endif
 
 // TODO: FASTEST search case for commands(maybe hash map but research is better to be sure)
 typedef struct {
 	NikiCommand* pCommands;
-	NIKISCRIPT_COMMANDS_SIZE_TYPE size;
+	NIKI_COMMANDS_SIZE_TYPE size;
 } NikiCommands;
 
 NikiCommand* nikiGetCommand(const NikiCommands* pCommands, sds name);

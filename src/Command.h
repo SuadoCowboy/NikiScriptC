@@ -6,12 +6,12 @@
 
 struct NikiContext;
 
-typedef void(*nikiCommandCallback)(struct NikiContext* pCtx);
+typedef void(*NikiCommandCallback)(struct NikiContext* pCtx);
 
-typedef struct NIKIAPI {
+typedef struct NIKIAPI NikiCommand {
 	sds name;
 	unsigned char minArgs, maxArgs;
-	nikiCommandCallback callback;
+	NikiCommandCallback callback;
 	sds description;
 
 	/**
@@ -30,9 +30,9 @@ typedef struct NIKIAPI {
  * @param pArgsDescriptions Arguments description. Should have 2 strings for each argument, where the first one is argument name and the second is argument description.
  * @see nikiRegisterCommands for code example
  */
-nikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, unsigned char maxArgs, nikiCommandCallback callback, const sds description, const sds* pArgsDescriptions);
+NikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, unsigned char maxArgs, NikiCommandCallback callback, const sds description, const sds* pArgsDescriptions);
 
 /**
  * @brief prints usage, description and argsDescriptions all like a data tree
  */
-void nikiCommand_printAsDataTree(const NikiCommand* pCommand);
+void NikiCommand_printAsDataTree(const NikiCommand* pCommand);

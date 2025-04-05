@@ -1,6 +1,6 @@
 #include "Context.h"
 
-std::string& ns::Arguments::getString(size_t index) {
+sds ns::Arguments::getString(size_t index) {
 	return arguments[index];
 }
 
@@ -29,7 +29,7 @@ long long ns::Arguments::getLongLong(size_t index) {
 	return std::stoll(arguments[index]);
 }
 
-ns::Context ns::copyContext(const Context& source) {
+ns::Context ns::copyContext(const NikiContext* source) {
 	Context copy{source};
 
 	for (size_t i = 0; i < copy.loopVariablesRunning.size(); ++i)
@@ -42,38 +42,4 @@ ns::Context ns::copyContext(const Context& source) {
 		copy.toggleCommandsRunning[i] = &copy.commands.commands.find(copy.toggleCommandsRunning[i]->name)->second;
 
 	return copy;
-}
-
-uint8_t operator|(ns::OriginType l, ns::OriginType r) {
-	return static_cast<uint8_t>(l)|static_cast<uint8_t>(r);
-}
-
-uint8_t operator|(uint8_t l, ns::OriginType r) {
-	return l|static_cast<uint8_t>(r);
-}
-
-uint8_t operator|(ns::OriginType l, uint8_t r) {
-	return static_cast<uint8_t>(l)|r;
-}
-
-uint8_t& operator|=(uint8_t& l, ns::OriginType r) {
-	l = l|r;
-	return l;
-}
-
-uint8_t operator&(uint8_t l, ns::OriginType r) {
-	return l&static_cast<uint8_t>(r);
-}
-
-uint8_t operator&(ns::OriginType l, uint8_t r) {
-	return static_cast<uint8_t>(l)&r;
-}
-
-uint8_t& operator&=(uint8_t& l, ns::OriginType r) {
-	l = l & r;
-	return l;
-}
-
-uint8_t operator~(ns::OriginType l) {
-	return ~static_cast<uint8_t>(l);
 }

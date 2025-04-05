@@ -1,39 +1,46 @@
 #pragma once
+
 #include <stdint.h>
-#include <string>
-#include <vector>
+
+#include <sds.h>
 
 #include "DLLExport.h"
 
-namespace ns {
-	enum TokenType : uint8_t {
-		NONE = 0,
-		IDENTIFIER = 1, ///< If it's the first token after an EOS, END or NONE. Should be either a variable or command
-		ARGUMENT = 2, ///< If lexer could not convert to integer and an identifier was already caught up
-		EOS = 4, ///< End Of Statement
-		END = 8 ///< End of input data
-	};
+#ifndef NIKI_REFERENCE_INDEX_TYPE
+#define NIKI_REFERENCE_INDEX_TYPE uint64_t
+#endif
 
-	struct NIKIAPI Token {
-		TokenType type = TokenType::NONE;
-		std::string value;
-		std::vector<std::pair<uint64_t, std::string>> references{}; ///< References identified in Token::value. **pair.first** = index where should insert the reference but _does not count with previous inserted references_
+#ifndef NIKI_REFERENCES_SIZE_TYPE
+#define NIKI_REFERENCES_SIZE_TYPE uint64_t
+#endif
 
-		Token();
-		Token(TokenType type);
-		Token(TokenType type, const std::string& value);
-	};
+typedef struct NIKIAPI NikiReference {
+	NIKI_REFERENCE_INDEX_TYPE index; ///< index where should insert the reference. **does not count with previous inserted references** so it needs to sum with an offset
+	sds name;
+} NikiReference;
 
-	struct Context;
+typedef struct NIKIAPI NikiReferences {
+	NikiReference* pReferences;
+	NIKI_REFERENCES_SIZE_TYPE size;
+} NikiReferences;
 
-	/**
-	 * @brief inserts all references in the value
-	 */
-	NIKIAPI void insertReferencesInToken(Context& ctx, Token& token);
-}
+typedef enum TokenType {
+	NIKI_TOKEN_NONE = 0,
+	NIKI_TOKEN_IDENTIFIER = 1, ///< If it's the first token after an EOS, END or NONE. Should be either a variable or command
+	NIKI_TOKEN_ARGUMENT = 2, ///< If lexer could not convert to integer and an identifier was already caught up
+	NIKI_TOKEN_EOS = 4, ///< End Of Statement
+	NIKI_TOKEN_END = 8 ///< End of input data
+} TokenType;
 
-NIKIAPI uint8_t operator|(ns::TokenType l, ns::TokenType r);
-NIKIAPI uint8_t operator|(uint8_t l, ns::TokenType r);
-NIKIAPI uint8_t operator|(ns::TokenType l, uint8_t r);
-NIKIAPI uint8_t operator&(uint8_t l, ns::TokenType r);
-NIKIAPI uint8_t operator&(ns::TokenType l, uint8_t r);
+typedef struct NIKIAPI NikiToken {
+	TokenType type;
+	sds value;
+	NikiReferences references; ///< References identified in nikiToken value.
+} NikiToken;
+
+struct NikiContext;
+
+/**
+ * @brief inserts all references in the value
+ */
+NIKIAPI void nikiInsertReferencesInToken(struct NikiContext* pCtx, NikiToken* pToken);

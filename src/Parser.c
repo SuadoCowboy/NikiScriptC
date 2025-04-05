@@ -6,14 +6,14 @@
 
 #include "PrintCallback.h"
 
-void ns::clearStatementData(Context& ctx) {
+void ns::clearStatementData(NikiContext* pCtx) {
 	ctx.pCommand = nullptr;
 	ctx.args.arguments.clear();
 }
 
-uint8_t ns::canRunVariable(Context& ctx) {
+uint8_t ns::canRunVariable(NikiContext* pCtx) {
 	switch (ctx.pLexer->token.value[0]) {
-	case NIKISCRIPT_TOGGLE_ON: {
+	case NIKI_TOGGLE_ON: {
 		ConsoleVariables::pointer pVarPair = &*ctx.consoleVariables.find(ctx.pLexer->token.value);
 		auto it = std::find(ctx.toggleVariablesRunning.begin(), ctx.toggleVariablesRunning.end(), pVarPair);
 
@@ -26,7 +26,7 @@ uint8_t ns::canRunVariable(Context& ctx) {
 		return false;
 	}
 
-	case NIKISCRIPT_TOGGLE_OFF: {
+	case NIKI_TOGGLE_OFF: {
 		ConsoleVariables::pointer pPlusVariable = nullptr;
 		{
 			auto it = ctx.consoleVariables.find('+'+ctx.pLexer->token.value.substr(1));
@@ -45,7 +45,7 @@ uint8_t ns::canRunVariable(Context& ctx) {
 		return false;
 	}
 
-	case NIKISCRIPT_LOOP_VARIABLE: {
+	case NIKI_LOOP_VARIABLE: {
 		ConsoleVariables::pointer pVar = &*ctx.consoleVariables.find(ctx.pLexer->token.value);
 
 		auto it = std::find(ctx.loopVariablesRunning.begin(), ctx.loopVariablesRunning.end(), pVar);
@@ -61,7 +61,7 @@ uint8_t ns::canRunVariable(Context& ctx) {
 	}
 }
 
-void ns::handleCommandCall(Context& ctx, ProgramVariable*& pProgramVar) {
+void ns::handleCommandCall(NikiContext* pCtx, ProgramVariable*& pProgramVar) {
 	if (pProgramVar != nullptr) {
 		if (ctx.args.arguments.size() == 0)
 			ns::printf(ns::ECHO, "Value: {}\n{}\n", pProgramVar->get(ctx, pProgramVar), pProgramVar->description);
@@ -88,7 +88,7 @@ void ns::handleCommandCall(Context& ctx, ProgramVariable*& pProgramVar) {
 	}
 
 	switch (ctx.pCommand->name[0]) {
-	case NIKISCRIPT_TOGGLE_ON: {
+	case NIKI_TOGGLE_ON: {
 		auto it = std::find(ctx.toggleCommandsRunning.begin(), ctx.toggleCommandsRunning.end(), ctx.pCommand);
 
 		if (it == ctx.toggleCommandsRunning.end())
@@ -102,8 +102,8 @@ void ns::handleCommandCall(Context& ctx, ProgramVariable*& pProgramVar) {
 		break;
 	}
 	
-	case NIKISCRIPT_TOGGLE_OFF: {
-		Command* pPlusCommand = ctx.commands.get('+'+std::string(ctx.pCommand->name.substr(1)));
+	case NIKI_TOGGLE_OFF: {
+		Command* pPlusCommand = ctx.commands.get('+'+sds(ctx.pCommand->name.substr(1)));
 		if (pPlusCommand == nullptr)
 			break;
 
@@ -124,9 +124,9 @@ void ns::handleCommandCall(Context& ctx, ProgramVariable*& pProgramVar) {
 	clearStatementData(ctx);
 }
 
-uint8_t ns::handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, uint8_t printError) {
+uint8_t ns::handleIdentifierToken(NikiContext* pCtx, ProgramVariable*& pProgramVar, uint8_t printError) {
 	if (ctx.pLexer->token.value.empty()) {
-		ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+		ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 		return 1;
 	}
 
@@ -134,7 +134,7 @@ uint8_t ns::handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, u
 		if (canRunVariable(ctx))
 			return 2;
 
-		ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+		ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 		return 0;
 
 	} else if (ctx.programVariables.count(ctx.pLexer->token.value) != 0) {
@@ -147,7 +147,7 @@ uint8_t ns::handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, u
 		if (ctx.pCommand == nullptr) {
 			if (printError)
 				ns::printf(PrintLevel::ERROR, "Unknown identifier \"{}\"\n", ctx.pLexer->token.value);
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 			return 0;
 		} else
 			return 1;
@@ -156,7 +156,7 @@ uint8_t ns::handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, u
 	return false;
 }
 
-void ns::handleArgumentToken(Context& ctx, uint8_t printError) {
+void ns::handleArgumentToken(NikiContext* pCtx, uint8_t printError) {
 	insertReferencesInToken(ctx, ctx.pLexer->token);
 
 	if (ctx.pLexer->token.value.empty())
@@ -174,7 +174,7 @@ void ns::handleArgumentToken(Context& ctx, uint8_t printError) {
 		if (printError)
 			ns::printf(ns::ERROR, "Expected 0 arguments for {} command\n", ctx.pCommand->name);
 		clearStatementData(ctx);
-		ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+		ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 		return;
 	}
 
@@ -183,7 +183,7 @@ void ns::handleArgumentToken(Context& ctx, uint8_t printError) {
 		ctx.args.arguments.pop_back();
 	}
 
-	const std::string_view& arg = ctx.pCommand->argsDescriptions[ctx.args.arguments.size()*2];
+	const sds_view& arg = ctx.pCommand->argsDescriptions[ctx.args.arguments.size()*2];
 	switch (arg[0]) {
 	case 'i':
 		try {
@@ -192,7 +192,7 @@ void ns::handleArgumentToken(Context& ctx, uint8_t printError) {
 			if (printError)
 				ns::printf(PrintLevel::ERROR, "{} -> Type not matched: expected (i)nteger number\n", arg);
 			clearStatementData(ctx);
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 			return;
 		}
 		break;
@@ -204,7 +204,7 @@ void ns::handleArgumentToken(Context& ctx, uint8_t printError) {
 			if (printError)
 				ns::printf(PrintLevel::ERROR, "{} -> Type not matched: expected (d)ecimal number\n", arg);
 			clearStatementData(ctx);
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 			return;
 		}
 		break;
@@ -217,7 +217,7 @@ void ns::handleArgumentToken(Context& ctx, uint8_t printError) {
 			if (printError)
 				ns::printf(PrintLevel::ERROR, "{} -> Type not matched: expected (v)ariable\n", arg);
 			clearStatementData(ctx);
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 			return;
 		}
 		break;
@@ -229,7 +229,7 @@ void ns::handleArgumentToken(Context& ctx, uint8_t printError) {
 	ctx.args.arguments.push_back(ctx.pLexer->token.value);
 }
 
-void ns::handleConsoleVariableCall(Context& ctx, ProgramVariable*& pProgramVar, uint8_t printError) {
+void ns::handleConsoleVariableCall(NikiContext* pCtx, ProgramVariable*& pProgramVar, uint8_t printError) {
 	Lexer* pOriginalLexer = ctx.pLexer;
 
 	std::vector<Lexer> tempLexers;
@@ -238,29 +238,29 @@ void ns::handleConsoleVariableCall(Context& ctx, ProgramVariable*& pProgramVar, 
 	ctx.pLexer = &tempLexers.back();
 	ctx.pLexer->advance();
 
-	ctx.origin |= (ctx.origin & OriginType::VARIABLE)<<1; // if (ctx.origin & VARIABLE(2)) ctx.origin |= VARIABLE_IN_VARIABLE(4)
-	ctx.origin |= OriginType::VARIABLE;
+	ctx.origin |= (ctx.origin & NIKI_ORIGIN_VARIABLE)<<1; // if (ctx.origin & VARIABLE(2)) ctx.origin |= VARIABLE_IN_VARIABLE(4)
+	ctx.origin |= NIKI_ORIGIN_VARIABLE;
 
 	while (tempLexers.size() != 0) {
 		switch (ctx.pLexer->token.type) {
-		case TokenType::IDENTIFIER:
+		case NIKI_TOKEN_IDENTIFIER:
 			if (handleIdentifierToken(ctx, pProgramVar, printError) == 2) {
 				if (ctx.maxConsoleVariablesRecursiveDepth != 0 && tempLexers.size() >= ctx.maxConsoleVariablesRecursiveDepth) {
-					ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+					ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 					break;
 				}
 
 				tempLexers.emplace_back(ctx.consoleVariables[ctx.pLexer->token.value]);
 				ctx.pLexer = &tempLexers.back();
-				ctx.origin |= OriginType::VARIABLE_IN_VARIABLE;
+				ctx.origin |= NIKI_ORIGIN_VARIABLE_IN_VARIABLE;
 			}
 			break;
 
-		case TokenType::EOS:
+		case NIKI_TOKEN_EOS:
 			handleCommandCall(ctx, pProgramVar);
 			break;
 
-		case TokenType::ARGUMENT:
+		case NIKI_TOKEN_ARGUMENT:
 			handleArgumentToken(ctx, printError);
 			break;
 
@@ -269,28 +269,28 @@ void ns::handleConsoleVariableCall(Context& ctx, ProgramVariable*& pProgramVar, 
 		}
 
 		ctx.pLexer->advance();
-		while (ctx.pLexer->token.type == TokenType::END) {
+		while (ctx.pLexer->token.type == NIKI_TOKEN_END) {
 			handleCommandCall(ctx, pProgramVar);
 
 			tempLexers.pop_back();
 			if (tempLexers.size() == 0)
 				break;
-			else if (tempLexers.size() == 1 && !(ctx.origin & OriginType::VARIABLE_LOOP))
-				ctx.origin &= ~OriginType::VARIABLE_IN_VARIABLE;
+			else if (tempLexers.size() == 1 && !(ctx.origin & NIKI_ORIGIN_VARIABLE_LOOP))
+				ctx.origin &= ~NIKI_ORIGIN_VARIABLE_IN_VARIABLE;
 
 			ctx.pLexer = &tempLexers.back();
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 		}
 	}
 
-	if (!(ctx.origin & OriginType::VARIABLE_LOOP))
-		ctx.origin &= ~OriginType::VARIABLE;
+	if (!(ctx.origin & NIKI_ORIGIN_VARIABLE_LOOP))
+		ctx.origin &= ~NIKI_ORIGIN_VARIABLE;
 
 	ctx.pLexer = pOriginalLexer;
 }
 
-void ns::updateLoopVariables(Context& ctx) {
-	ctx.origin |= OriginType::VARIABLE|OriginType::VARIABLE_LOOP;
+void ns::updateLoopVariables(NikiContext* pCtx) {
+	ctx.origin |= NIKI_ORIGIN_VARIABLE|NIKI_ORIGIN_VARIABLE_LOOP;
 
 	ctx.pLexer->clear();
 	for (auto& pVar : ctx.loopVariablesRunning) {
@@ -299,34 +299,34 @@ void ns::updateLoopVariables(Context& ctx) {
 		ctx.pLexer->clear();
 	}
 	
-	ctx.origin &= ~(OriginType::VARIABLE|OriginType::VARIABLE_LOOP);
+	ctx.origin &= ~(NIKI_ORIGIN_VARIABLE|NIKI_ORIGIN_VARIABLE_LOOP);
 }
 
-void ns::parse(Context& ctx, uint8_t printError) {
+void ns::parse(NikiContext* pCtx, uint8_t printError) {
 	if (ctx.pLexer == nullptr)
 		return;
 
 	ProgramVariable* pProgramVar = nullptr;
 
 	ctx.pLexer->advance();
-	while (ctx.pLexer->token.type != TokenType::END) {
+	while (ctx.pLexer->token.type != NIKI_TOKEN_END) {
 		switch (ctx.pLexer->token.type) {
-		case TokenType::IDENTIFIER: { // can be either variable or command
+		case NIKI_TOKEN_IDENTIFIER: { // can be either variable or command
 			uint8_t result = handleIdentifierToken(ctx, pProgramVar, printError);
 			if (result == 2) {
 				handleConsoleVariableCall(ctx, pProgramVar, printError);
-				ctx.pLexer->advanceUntil(static_cast<uint8_t>(TokenType::EOS));
+				ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
 			} else if (result == 1)
 				ctx.pLexer->advance();
 			break;
 		}
 
-		case TokenType::ARGUMENT:
+		case NIKI_TOKEN_ARGUMENT:
 			handleArgumentToken(ctx, printError);
 			ctx.pLexer->advance();
 			break;
 
-		case TokenType::EOS:
+		case NIKI_TOKEN_EOS:
 			handleCommandCall(ctx, pProgramVar);
 			ctx.pLexer->advance();
 			break;
@@ -340,7 +340,7 @@ void ns::parse(Context& ctx, uint8_t printError) {
 	handleCommandCall(ctx, pProgramVar);
 }
 
-uint8_t ns::parseFile(Context& ctx, const char* filePath, uint8_t printError) {
+uint8_t ns::parseFile(NikiContext* pCtx, const char* filePath, uint8_t printError) {
 	std::ifstream file{filePath};
 
 	if (!file) {
@@ -349,15 +349,15 @@ uint8_t ns::parseFile(Context& ctx, const char* filePath, uint8_t printError) {
 		return false;
 	}
 
-	uint8_t runningFromAnotherFile = (ctx.origin & OriginType::FILE);
-	ctx.origin |= OriginType::FILE;
+	uint8_t runningFromAnotherFile = (ctx.origin & NIKI_ORIGIN_FILE);
+	ctx.origin |= NIKI_ORIGIN_FILE;
 
-	std::string originalFilePath = ctx.filePath;
+	sds originalFilePath = ctx.filePath;
 	ctx.filePath = filePath;
 
-	std::stringstream script{};
+	sdsstream script{};
 	while (file.good()) {
-		std::string line;
+		sds line;
 		std::getline(file, line);
 
 		if (!line.empty())
@@ -385,7 +385,7 @@ uint8_t ns::parseFile(Context& ctx, const char* filePath, uint8_t printError) {
 	ctx.filePath = originalFilePath;
 
 	if (!runningFromAnotherFile)
-		ctx.origin &= ~OriginType::FILE;
+		ctx.origin &= ~NIKI_ORIGIN_FILE;
 
 	return true;
 }

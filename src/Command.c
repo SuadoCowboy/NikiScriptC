@@ -4,7 +4,7 @@
 
 #include "PrintCallback.h"
 
-nikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, unsigned char maxArgs, nikiCommandCallback callback, const sds description, const sds* pArgsDescriptions) {
+NikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, unsigned char maxArgs, NikiCommandCallback callback, const sds description, const sds* pArgsDescriptions) {
 	assert(!name.empty());
 	assert(minArgs <= maxArgs);
 	assert(argsDescriptions.size() % 2 == 0);
@@ -12,7 +12,7 @@ nikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, u
 
 	uint8_t isName = true;
 	for (uint8_t i = 0; i < argsDescriptions.size(); ++i) {
-		const std::string_view& arg = argsDescriptions[i];
+		const sds_view& arg = argsDescriptions[i];
 
 		if (isName) {
 			assert(arg.size() > 3);
@@ -28,11 +28,11 @@ nikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, u
 	assert(callback != nullptr);
 }
 
-std::string ns::Command::getArgumentsNames() {
+sds ns::Command::getArgumentsNames() {
 	if (argsDescriptions.size() == 0)
 		return "";
 
-	std::stringstream oss{};
+	sdsstream oss{};
 	uint8_t isName = true;
 
 	for (uint64_t i = 0; i < argsDescriptions.size(); ++i) {
@@ -42,15 +42,15 @@ std::string ns::Command::getArgumentsNames() {
 		isName = !isName;
 	}
 
-	std::string out = oss.str();
+	sds out = oss.str();
 	out.erase(out.size()-1);
 
 	return out;
 }
 
 void ns::Command::printAsDataTree() {
-	std::stringstream descriptions{};
-	std::stringstream usage{};
+	sdsstream descriptions{};
+	sdsstream usage{};
 	uint8_t isName = true;
 
 	usage << "- Usage: " << name << ' ';
@@ -67,5 +67,5 @@ void ns::Command::printAsDataTree() {
 	}
 	usage << '\n' << descriptions.str();
 
-	ns::print(PrintLevel::ECHO, usage.str());
+	nikiPrint(PrintLevel::ECHO, usage.str());
 }

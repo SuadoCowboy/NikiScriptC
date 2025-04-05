@@ -10,32 +10,32 @@
 #include <Lexer.h>
 #include <Parser.h>
 
-void nikiScriptPrintCallback(void*, ns::PrintLevel level, const std::string& msg) {
+void nikiScriptPrintCallback(void*, ns::PrintLevel level, const sds msg) {
 	std::cout << ns::printLevelToString(level) << ": " << msg;
 }
 
-std::string tokenTypeToString(const ns::TokenType& type) {
+sds tokenTypeToString(const ns::TokenType& type) {
 	switch (type) {
-	case ns::TokenType::NONE:
+	case ns::NIKI_TOKEN_NONE:
 		return "NONE";
-	case ns::TokenType::IDENTIFIER:
+	case ns::NIKI_TOKEN_IDENTIFIER:
 		return "IDENTIFIER";
-	case ns::TokenType::ARGUMENT:
+	case ns::NIKI_TOKEN_ARGUMENT:
 		return "ARGUMENT";
-	case ns::TokenType::EOS:
+	case ns::NIKI_TOKEN_EOS:
 		return "EOS";
-	case ns::TokenType::END:
+	case ns::NIKI_TOKEN_END:
 		return "END";
 	default:
 		return "UNKNOWN";
 	}
 }
 
-std::string tokenToString(const ns::Token& token) {
-	std::stringstream out{};
+sds tokenToString(const ns::Token& token) {
+	sdsstream out{};
 	out << '(' << tokenTypeToString(token.type) << ", \"" << token.value << "\", REFS: {";
 
-	std::string formatted = token.value;
+	sds formatted = token.value;
 	if (token.references.empty())
 		return out.str()+"})";
 
@@ -44,14 +44,14 @@ std::string tokenToString(const ns::Token& token) {
 		formatted.insert(ref.first, ref.second);
 	}
 
-	std::string outString = out.str();
+	sds outString = out.str();
 	outString.replace(outString.begin()+outString.size()-2, outString.begin()+outString.size()-1, "}) -> ");
 
 	return outString + formatted;
 }
 
 
-static void test_command(ns::Context& ctx) {
+static void test_command(ns::NikiContext* pCtx) {
 	ns::Context copy = ns::copyContext(ctx);
 	ns::Lexer lexer{ctx.args.getString(0)};
 	copy.pLexer = &lexer;
@@ -61,7 +61,7 @@ static void test_command(ns::Context& ctx) {
 }
 
 uint8_t running = false;
-static void quit_command(ns::Context&) {
+static void quit_command(ns::NikiContext*) {
 	running = false;
 }
 
@@ -121,7 +121,7 @@ int main(int, char**) {
 
 	running = true;
 	while (running) {
-		std::string input;
+		sds input;
 
 		std::cout << "> ";
 		std::getline(std::cin, input);

@@ -1,70 +1,61 @@
 #pragma once
 
-#include <string>
-#include <string_view>
-#include <sstream>
-#include <unordered_map>
+#include <stdint.h>
+
+#include <sds.h>
+// #include <unordered_map>
 
 #include "DLLExport.h"
 
-namespace ns {
-	struct ProgramVariable;
-	struct Context;
+#ifndef NIKI_PROGRAM_VARIABLES_SIZE_TYPE
+#define NIKI_PROGRAM_VARIABLES_SIZE_TYPE uint32_t
+#endif1
 
-	typedef std::string(*GetProgramVariableValue)(Context& ctx, ProgramVariable* pVar);
-	typedef void(*SetProgramVariableValue)(Context& ctx, ProgramVariable* pVar, const std::string& str);
-	
-	struct Context;
+struct ProgramVariable;
+struct Context;
 
-	struct NIKIAPI ProgramVariable {
-		void* pValue = nullptr;
-		std::string_view description;
+typedef sds(*GetProgramVariableValue)(NikiContext* pCtx, ProgramVariable* pVar);
+typedef void(*SetProgramVariableValue)(NikiContext* pCtx, ProgramVariable* pVar, const sds str);
 
-		GetProgramVariableValue get = nullptr;
-		SetProgramVariableValue set = nullptr;
+struct Context;
 
-		ProgramVariable();
-		ProgramVariable(void* pVariable, const std::string_view& description, const GetProgramVariableValue& get, const SetProgramVariableValue& set);
-	};
+typedef struct NIKIAPI ProgramVariable {
+	void* pValue;
+	sds description;
 
-	typedef std::unordered_map<std::string, ProgramVariable> ProgramVariables;
+	GetProgramVariableValue get;
+	SetProgramVariableValue set;
+} NikiProgramVariable;
 
-	NIKIAPI std::string getString(Context&, ProgramVariable* pVar);
-	NIKIAPI void setString(Context&, ProgramVariable* pVar, const std::string& str);
+typedef struct NIKIAPI NikiProgramVariables {
+	NikiProgramVariable* pVars;
+	NIKI_PROGRAM_VARIABLES_SIZE_TYPE size;
+} NikiProgramVariables;
 
-	template<typename T>
-	std::string getNumber(Context&, ProgramVariable* pVar) {
-		return std::to_string(*static_cast<T*>(pVar->pValue));
-	}
+NIKIAPI sds getString(NikiContext*, NikiProgramVariable* pVar);
+NIKIAPI void setString(NikiContext*, NikiProgramVariable* pVar, const sds& str);
 
-	/**
-	 * @brief uses std::stoul so any number below that can be used
-	 * @tparam T number type
-	 * @param ctx
-	 * @param pVar 
-	 * @param str
-	 */
-	template<typename T>
-	void setUnsigned(Context&, ProgramVariable* pVar, const std::string& str)
-	#if BUILD_SHARED == 1 && BUILD_EXPORT == 1
-	;
-	#else
-	{
-		try {
-			*static_cast<T*>(pVar->pValue) = (T)std::stoul(str);
-		} catch (...) {}
-	}
-	#endif
-
-	NIKIAPI void setUnsignedLongLong(Context&, ProgramVariable* pVar, const std::string& str);
-
-	NIKIAPI void setFloat(Context&, ProgramVariable* pVar, const std::string& str);
-	NIKIAPI void setDouble(Context&, ProgramVariable* pVar, const std::string& str);
-	NIKIAPI void setLongDouble(Context&, ProgramVariable* pVar, const std::string& str);
-
-	NIKIAPI void setChar(Context&, ProgramVariable* pVar, const std::string& str);
-	NIKIAPI void setShort(Context&, ProgramVariable* pVar, const std::string& str);
-	NIKIAPI void setInteger(Context&, ProgramVariable* pVar, const std::string& str);
-	NIKIAPI void setLong(Context&, ProgramVariable* pVar, const std::string& str);
-	NIKIAPI void setLongLong(Context&, ProgramVariable* pVar, const std::string& str);
+template<typename T>
+sds getNumber(NikiContext*, ProgramVariable* pVar) {
+	return std::to_string(*static_cast<T*>(pVar->pValue));
 }
+
+/**
+ * @brief uses std::stoul so any number below that can be used
+ * @tparam T number type
+ * @param ctx
+ * @param pVar 
+ * @param str
+ */
+
+NIKIAPI void setUnsignedLongLong(NikiContext*, ProgramVariable* pVar, const sds& str);
+
+NIKIAPI void setFloat(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void setDouble(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void setLongDouble(NikiContext*, ProgramVariable* pVar, const sds& str);
+
+NIKIAPI void setChar(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void setShort(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void setInteger(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void setLong(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void setLongLong(NikiContext*, ProgramVariable* pVar, const sds& str);

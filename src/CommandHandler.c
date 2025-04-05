@@ -2,7 +2,7 @@
 
 #include "Context.h"
 
-ns::Command* ns::CommandHandler::get(const std::string_view& name) {
+ns::Command* ns::CommandHandler::get(const sds_view& name) {
 	return commands.count(name) == 0? nullptr : &commands[name];
 }
 
@@ -15,7 +15,7 @@ uint8_t ns::CommandHandler::add(const Command& command) {
 	return true;
 }
 
-void ns::CommandHandler::remove(const std::string_view& name, Context& ctx) {
+void ns::CommandHandler::remove(const sds_view& name, NikiContext* pCtx) {
 	for (size_t i = 0; i < ctx.toggleCommandsRunning.size(); ++i) {
 		if (name == ctx.toggleCommandsRunning[i]->name) {
 			ctx.toggleCommandsRunning.erase(ctx.toggleCommandsRunning.begin()+i);

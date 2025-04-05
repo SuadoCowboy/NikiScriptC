@@ -3,16 +3,16 @@
 #include "DLLExport.h"
 #include "Context.h"
 
-#ifndef NIKISCRIPT_LOOP_VARIABLE
-#define NIKISCRIPT_LOOP_VARIABLE '!'
+#ifndef NIKI_LOOP_VARIABLE
+#define NIKI_LOOP_VARIABLE '!'
 #endif
 
-#ifndef NIKISCRIPT_TOGGLE_ON
-#define NIKISCRIPT_TOGGLE_ON '+'
+#ifndef NIKI_TOGGLE_ON
+#define NIKI_TOGGLE_ON '+'
 #endif
 
-#ifndef NIKISCRIPT_TOGGLE_OFF
-#define NIKISCRIPT_TOGGLE_OFF '-'
+#ifndef NIKI_TOGGLE_OFF
+#define NIKI_TOGGLE_OFF '-'
 #endif
 
 namespace ns {
@@ -20,7 +20,7 @@ namespace ns {
 	 * @brief Clear anything related to the current lexer statement
 	 * @note It does not go to the next EOS
 	 */
-	NIKIAPI void clearStatementData(Context& ctx);
+	NIKIAPI void clearStatementData(NikiContext* pCtx);
 
 	/**
 	 * @brief if variable is a toggle variable and its allowed to run or if it's a common variable.
@@ -31,7 +31,7 @@ namespace ns {
 	 * @see ns::parse
 	 * @see ns::handleIdentifierToken
 	 */
-	NIKIAPI uint8_t canRunVariable(Context& ctx);
+	NIKIAPI uint8_t canRunVariable(NikiContext* pCtx);
 
 	/**
 	 * @brief Called in parse function when EOS or END is reached
@@ -41,7 +41,7 @@ namespace ns {
 	 * @param pProgramVar if not null: sets/gets program variable
 	 * @see ns::parse
 	 */
-	NIKIAPI void handleCommandCall(Context& ctx, ProgramVariable*& pProgramVar);
+	NIKIAPI void handleCommandCall(NikiContext* pCtx, ProgramVariable*& pProgramVar);
 
 	/**
 	 * @brief Called in parse function when IDENTIFIER token is passed
@@ -52,14 +52,14 @@ namespace ns {
 	 * @see ns::parse
 	 * @see ns::canRunVariable
 	 */
-	NIKIAPI uint8_t handleIdentifierToken(Context& ctx, ProgramVariable*& pProgramVar, uint8_t printError);
+	NIKIAPI uint8_t handleIdentifierToken(NikiContext* pCtx, ProgramVariable*& pProgramVar, uint8_t printError);
 
 	/**
 	 * @brief Handles references in the string and checks if the parameter matches the argument type
 	 * @note Possible argument types: s = string, i = integer, d = decimal, v = variable
 	 * @see ns::parse
 	 */
-	NIKIAPI void handleArgumentToken(Context& ctx, uint8_t printError);
+	NIKIAPI void handleArgumentToken(NikiContext* pCtx, uint8_t printError);
 
 	/**
 	 * @brief Called in parse function when an ConsoleVariable is passed as a IDENTIFIER
@@ -68,19 +68,19 @@ namespace ns {
 	 * @param ctx
 	 * @param pProgramVar
 	 */
-	NIKIAPI void handleConsoleVariableCall(Context& ctx, ProgramVariable*& pProgramVar, uint8_t printError);
+	NIKIAPI void handleConsoleVariableCall(NikiContext* pCtx, ProgramVariable*& pProgramVar, uint8_t printError);
 
 	/**
 	 * @brief if a loop variable is active, its script is ran here
 	 * @param ctx
 	 */
-	NIKIAPI void updateLoopVariables(Context& ctx);
+	NIKIAPI void updateLoopVariables(NikiContext* pCtx);
 
 	/**
 	 * @brief Parses and interpret scripts: handles commands and variables as well as their arguments
 	 * @param ctx
 	 */
-	NIKIAPI void parse(Context& ctx, uint8_t printError=true);
+	NIKIAPI void parse(NikiContext* pCtx, uint8_t printError=true);
 
-	NIKIAPI uint8_t parseFile(Context& ctx, const char* filePath, uint8_t printError);
+	NIKIAPI uint8_t parseFile(NikiContext* pCtx, const char* filePath, uint8_t printError);
 }

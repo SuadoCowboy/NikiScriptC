@@ -1,33 +1,38 @@
 #include "PrintCallback.h"
 
-ns::PrintCallback ns::printCallback = nullptr;
-void* ns::pPrintCallbackData = nullptr;
+#include "Context.h"
 
-std::string ns::printLevelToString(PrintLevel level) {
+sds nikiPrintLevelToString(PrintLevel level) {
 	switch (level) {
 	case PrintLevel::DEFAULT:
-		return std::string("DEFAULT");
+		return sds("DEFAULT");
 	case PrintLevel::ECHO:
-		return std::string("ECHO");
+		return sds("ECHO");
 	case PrintLevel::WARNING:
-		return std::string("WARNING");
+		return sds("WARNING");
 	case PrintLevel::ERROR:
-		return std::string("ERROR");
+		return sds("ERROR");
 	default:
-		return std::string("UNKNOWN");
+		return sds("UNKNOWN");
 	}
 
 }
 
-void ns::setPrintCallback(void* pData, PrintCallback callback) {
+void nikiSetPrintCallback(void* pData, PrintCallback callback) {
 	printCallback = callback;
 	pPrintCallbackData = pData;
 }
 
-void ns::print(const ns::PrintLevel &level, const std::string& str) {
-	printCallback(pPrintCallbackData, level, str);
+void nikiPrint(NikiPrintLevel level, NikiContext* pCtx, const sds str) {
+	printCallback(pPrintCallbackData, pCtx, level, str);
 }
 
-void ns::printUnknownCommand(const std::string& command) {
+void nikiPrintf(NikiPrintLevel level, const sds format, ...) {
+	
+
+	print(level, formatString(format, args...));
+}
+
+void nikiPrintUnknownCommand(const sds command) {
 	printf(PrintLevel::ERROR, "Unknown command \"{}\"\n", command);
 }

@@ -13,7 +13,7 @@
  * @param buf 
  */
 // template<typename ...>
-// static void _formatStringValue(const std::string& format, std::stringstream& buf) {
+// static void _formatStringValue(const sds format, sdsstream& buf) {
 // 	buf << format;
 // }
 
@@ -27,9 +27,9 @@
  * @param args 
  */
 // template<typename T, typename ... Args>
-// static void _formatStringValue(const std::string& format, std::stringstream& buf, T value, Args& ... args) {
+// static void _formatStringValue(const sds format, sdsstream& buf, T value, Args& ... args) {
 // 	uint64_t idx = format.find("{}");
-// 	if (idx == std::string::npos) {
+// 	if (idx == sds::npos) {
 // 		buf << format;
 // 		return;
 // 	}
@@ -44,11 +44,11 @@
  * @tparam Args
  * @param format
  * @param args
- * @return std::string
+ * @return sds
  */
 template<typename ... Args>
-std::string formatString(const std::string& format, Args ... args) {
-	std::stringstream buf{};
+sds formatString(const sds format, Args ... args) {
+	sdsstream buf{};
 	_formatStringValue(format, buf, args...);
 	return buf.str();
 }
@@ -60,7 +60,7 @@ std::string formatString(const std::string& format, Args ... args) {
 	 * @see ns::rtrim
 	 * @note https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
 	 */
-NIKIAPI void ltrim(std::string &s);
+NIKIAPI void ltrim(sds &s);
 
 /**
  * @brief trim from end
@@ -69,7 +69,7 @@ NIKIAPI void ltrim(std::string &s);
  * @see ns::ltrim
  * @note https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
  */
-NIKIAPI void rtrim(std::string &s);
+NIKIAPI void rtrim(sds &s);
 
 /**
  * @brief trim from start and end
@@ -78,7 +78,7 @@ NIKIAPI void rtrim(std::string &s);
  * @see ns::rtrim
  * @note https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
  */
-NIKIAPI void trim(std::string& s);
+NIKIAPI void trim(sds s);
 
 /**
  * @brief call isspace but does not accept newline

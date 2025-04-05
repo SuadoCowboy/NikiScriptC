@@ -1,82 +1,78 @@
 #include "Lexer.h"
 
-#include <sstream>
-
 #include "Utils.h"
 
-ns::Lexer::Lexer() {}
-ns::Lexer::Lexer(const std::string& input) : input(input) {}
+void nikiLexerAdvance(NikiLexer* pLexer) {
+	nikiReferencesClear(pLexer->token.references)
 
-void ns::Lexer::advance() {
-	token.references.clear();
-	while (position < input.size() && isSpaceNotNewline(input[position]))
-		++position;
+	while (pLexer->position < pLexer->inputSize && isSpaceNotNewline(pLexer->input[pLexer->position]))
+		++pLexer->position;
 
-	if (position >= input.size()) {
-		token.type = TokenType::END;
+	if (pLexer->position >= pLexer->inputSize) {
+		token.type = NIKI_TOKEN_END;
 		token.value = "";
 		return;
 	}
 
-	if (input[position] == '\n')
+	if (pLexer->input[pLexer->position] == '\n')
 		lineIndex++;
 
-	uint64_t nextTokenPosition = setTokenValue();
-	setTokenType();
+	uint64_t nextTokenPosition = nikiLexerSetTokenValue();
+	nikiLexerSetTokenType();
 
-	position = nextTokenPosition;
+	pLexer->position = nextTokenPosition;
 }
 
-void ns::Lexer::advanceUntil(uint8_t flags) {
-	flags |= static_cast<uint8_t>(TokenType::END);
+void nikiLexerAdvanceUntil(NikiLexer* pLexer, uint8_t flags) {
+	flags |= static_cast<uint8_t>(NIKI_TOKEN_END);
 
 	advance();
 	while (!(flags & token.type))
 		advance();
 }
 
-uint64_t ns::Lexer::setTokenValue() {
-	if (input[position] == NIKISCRIPT_STATEMENT_SEPARATOR || input[position] == '\n') {
-		token.value = NIKISCRIPT_STATEMENT_SEPARATOR;
-		return position+1;
+NIKI_LEXER_INPUT_SIZE_TYPE nikiLexerSetTokenValue(NikiLexer* pLexer) {
+	if (pLexer->input[pLexer->position] == NIKI_STATEMENT_SEPARATOR || pLexer->input[pLexer->position] == '\n') {
+		token.value = NIKI_STATEMENT_SEPARATOR;
+		return pLexer->position+1;
 	}
 
-	uint64_t nextTokenPosition = position;
-	std::stringstream result{};
+	NIKI_LEXER_INPUT_SIZE_TYPE nextTokenPosition = pLexer->position;
+	sds result = sdsempty();
 
 	/*
-	1 = allow white space and NIKISCRIPT_STATEMENT_SEPARATOR
+	1 = allow white space and NIKI_STATEMENT_SEPARATOR
 	2 = escape next char
-	4 = skipping all until NIKISCRIPT_COMMENT_LINES+NIKISCRIPT_COMMENT_LINE is found
+	4 = skipping all until NIKI_COMMENT_LINES+NIKI_COMMENT_LINE is found
 	*/
-	unsigned char flags = openArguments == 0? 0 : 1;
+	unsigned char flags = pLexer->openArguments == 0? 0 : 1;
 
-	while (nextTokenPosition < input.size() && (position == nextTokenPosition || ((!isSpaceNotNewline(input[nextTokenPosition]) && (input[nextTokenPosition] != NIKISCRIPT_STATEMENT_SEPARATOR || (flags & 2))) || (flags & 1)))) {
+	while (nextTokenPosition < pLexer->inputSize && (pLexer->position == nextTokenPosition || ((!isSpaceNotNewline(pLexer->input[nextTokenPosition]) && (pLexer->input[nextTokenPosition] != NIKI_STATEMENT_SEPARATOR || (flags & 2))) || (flags & 1)))) {
 		if (flags & 2) {
 			flags &= ~2;
-			result << input[nextTokenPosition++];
+			result = sdscat(result, pLexer->input[nextTokenPosition++]);
 			continue;
 		}
 
 		if (flags & 4) {
-			if (input[nextTokenPosition] == '\n')
-				++lineIndex;
+			if (pLexer->input[nextTokenPosition] == '\n')
+				++pLexer->lineIndex;
 
-			if (input[nextTokenPosition] == NIKISCRIPT_COMMENT_LINE && input[nextTokenPosition-1] == NIKISCRIPT_COMMENT_LINES)
+			if (pLexer->input[nextTokenPosition] == NIKI_COMMENT_LINE && pLexer->input[nextTokenPosition-1] == NIKI_COMMENT_LINES)
 				flags &= ~5;
 
 			++nextTokenPosition;
 			continue;
 		}
 
-		if (input[nextTokenPosition] == '\n')
+		if (pLexer->input[nextTokenPosition] == '\n')
 			break;
 
-		if (nextTokenPosition+1 < input.size() && input[nextTokenPosition] == NIKISCRIPT_COMMENT_LINE) {
-			if (input[nextTokenPosition+1] == NIKISCRIPT_COMMENT_LINE) {
+		if (nextTokenPosition+1 < pLexer->inputSize && pLexer->input[nextTokenPosition] == NIKI_COMMENT_LINE) {
+			if (pLexer->input[nextTokenPosition+1] == NIKI_COMMENT_LINE) {
 				size_t i = nextTokenPosition;
-				for (; i < input.size(); ++i) {
-					if (input[i] == '\n')
+				for (; i < pLexer->inputSize; ++i) {
+					if (pLexer->input[i] == '\n')
 						break;
 				}
 
@@ -84,15 +80,15 @@ uint64_t ns::Lexer::setTokenValue() {
 				break;
 			}
 
-			if (input[nextTokenPosition+1] == NIKISCRIPT_COMMENT_LINES) {
+			if (pLexer->input[nextTokenPosition+1] == NIKI_COMMENT_LINES) {
 				flags |= 5;
 				nextTokenPosition += 3;
 				continue;
 			}
 		}
 
-		if (input[nextTokenPosition] == NIKISCRIPT_ARGUMENTS_OPEN) {
-			if (token.type == TokenType::NONE || ((TokenType::EOS|TokenType::END) & token.type))
+		if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_OPEN) {
+			if (token.type == NIKI_TOKEN_NONE || ((NIKI_TOKEN_EOS|NIKI_TOKEN_END) & token.type))
 				break;
 
 			++openArguments;
@@ -103,11 +99,11 @@ uint64_t ns::Lexer::setTokenValue() {
 				continue;
 			}
 
-		} else if (input[nextTokenPosition] == NIKISCRIPT_ARGUMENTS_SEPARATOR && openArguments == 1) {
+		} else if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_SEPARATOR && openArguments == 1) {
 			++nextTokenPosition;
 			break;
 
-		} else if (input[nextTokenPosition] == NIKISCRIPT_ARGUMENTS_CLOSE && openArguments != 0) {
+		} else if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_CLOSE && openArguments != 0) {
 			--openArguments;
 			if (openArguments == 0) {
 				++nextTokenPosition;
@@ -115,34 +111,34 @@ uint64_t ns::Lexer::setTokenValue() {
 			}
 		}
 
-		if (input[nextTokenPosition] == NIKISCRIPT_ESCAPE_NEXT_CHAR) {
+		if (pLexer->input[nextTokenPosition] == NIKI_ESCAPE_NEXT_CHAR) {
 			flags |= 2;
 			++nextTokenPosition;
 			continue;
 
-		} else if (input[nextTokenPosition] == NIKISCRIPT_REFERENCE && nextTokenPosition+1 < input.size() && input[nextTokenPosition+1] == NIKISCRIPT_REFERENCE_OPEN) {
-			std::stringstream referenceStream;
+		} else if (pLexer->input[nextTokenPosition] == NIKI_REFERENCE && nextTokenPosition+1 < pLexer->inputSize && pLexer->input[nextTokenPosition+1] == NIKI_REFERENCE_OPEN) {
+			sds reference;
 
 			uint64_t tempIndex = nextTokenPosition+2;
 			
 			uint8_t foundCloseReference = false;
-			for (; tempIndex < input.size() && !isSpaceNotNewline(input[tempIndex]); ++tempIndex) {
-				if (input[tempIndex] == NIKISCRIPT_REFERENCE_CLOSE) {
+			for (; tempIndex < pLexer->inputSize && !isSpaceNotNewline(pLexer->input[tempIndex]); ++tempIndex) {
+				if (pLexer->input[tempIndex] == NIKI_REFERENCE_CLOSE) {
 					++tempIndex;
 					foundCloseReference = true;
 					break;
 				}
 
-				referenceStream << input[tempIndex];
+				reference << pLexer->input[tempIndex];
 			}
 
 			if (foundCloseReference) {
-				token.references.emplace_back(result.str().size(), referenceStream.str());
+				nikiReferencesPush(sdslen(result), reference.str())
 				nextTokenPosition = tempIndex;
 				continue;
 			}
 		
-		} else if (input[nextTokenPosition] == NIKISCRIPT_ARGUMENTS_QUOTE && openArguments == 0) {
+		} else if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_QUOTE && pLexer->openArguments == 0) {
 			++nextTokenPosition;
 			
 			if (flags & 1) {
@@ -154,28 +150,28 @@ uint64_t ns::Lexer::setTokenValue() {
 			}
 		}
 
-		result << input[nextTokenPosition++];
+		result = sdscat(result, pLexer->input[nextTokenPosition++]);
 	}
 
 	token.value = result.str();
 	return nextTokenPosition;
 }
 
-void ns::Lexer::setTokenType() {
-	if (!token.value.empty() && token.value[0] == NIKISCRIPT_STATEMENT_SEPARATOR) {
-		token.type = TokenType::EOS;
+void nikiLexerSetTokenType(NikiLexer* pLexer) {
+	if (!token.value.empty() && token.value[0] == NIKI_STATEMENT_SEPARATOR) {
+		token.type = NIKI_TOKEN_EOS;
 
-	} else if (token.type == TokenType::NONE || ((TokenType::EOS|TokenType::END) & token.type)) { // if the lexer just started and is not EOS
-		token.type = TokenType::IDENTIFIER;
+	} else if (token.type == NIKI_TOKEN_NONE || ((NIKI_TOKEN_EOS|NIKI_TOKEN_END) & token.type)) { // if the lexer just started and is not EOS
+		token.type = NIKI_TOKEN_IDENTIFIER;
 
-	} else if ((TokenType::IDENTIFIER|TokenType::ARGUMENT) & token.type)
-		token.type = TokenType::ARGUMENT;
+	} else if ((NIKI_TOKEN_IDENTIFIER|NIKI_TOKEN_ARGUMENT) & token.type)
+		token.type = NIKI_TOKEN_ARGUMENT;
 }
 
-void ns::Lexer::clear() {
-	input.clear();
-	position = 0;
-	token = {TokenType::NONE};
+void nikiLexerClear(NikiLexer* pLexer) {
+	pLexer->input.clear();
+	pLexer->position = 0;
+	token = {NIKI_TOKEN_NONE};
 	openArguments = 0;
 	lineIndex = 0;
 }
