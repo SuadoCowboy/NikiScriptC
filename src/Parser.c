@@ -20,10 +20,10 @@ uint8_t ns::canRunVariable(NikiContext* pCtx) {
 		if (it == ctx.toggleVariablesRunning.end()) {
 			ctx.toggleVariablesRunning.push_back(pVarPair);
 
-			return true;
+			return 1;
 		}
 
-		return false;
+		return 0;
 	}
 
 	case NIKI_TOGGLE_OFF: {
@@ -31,7 +31,7 @@ uint8_t ns::canRunVariable(NikiContext* pCtx) {
 		{
 			auto it = ctx.consoleVariables.find('+'+ctx.pLexer->token.value.substr(1));
 			if (it == ctx.consoleVariables.end())
-				return false;
+				return 0;
 
 			pPlusVariable = &*it;
 		}
@@ -40,9 +40,9 @@ uint8_t ns::canRunVariable(NikiContext* pCtx) {
 		if (it != ctx.toggleVariablesRunning.end()) {
 			ctx.toggleVariablesRunning.erase(it);
 
-			return true;
+			return 1;
 		}
-		return false;
+		return 0;
 	}
 
 	case NIKI_LOOP_VARIABLE: {
@@ -53,11 +53,11 @@ uint8_t ns::canRunVariable(NikiContext* pCtx) {
 			ctx.loopVariablesRunning.push_back(pVar);
 		else
 			ctx.loopVariablesRunning.erase(it);
-		return false;
+		return 0;
 	}
 
 	default:
-		return true;
+		return 1;
 	}
 }
 
@@ -78,9 +78,9 @@ void ns::handleCommandCall(NikiContext* pCtx, ProgramVariable*& pProgramVar) {
 
 	if (ctx.pCommand->minArgs > ctx.args.arguments.size()) {
 		if (ctx.pCommand->minArgs == ctx.pCommand->maxArgs)
-			ns::printf(ns::ERROR, "Expected {} argument(s) but received {} arguments\n", static_cast<uint16_t>(ctx.pCommand->minArgs), ctx.args.arguments.size());
+			ns::printf(ns::ERROR, "Expected {} argument(s) but received {} arguments\n", (uint16_t)(ctx.pCommand->minArgs), ctx.args.arguments.size());
 		else
-			ns::printf(ns::ERROR, "Expected arguments between [{}, {}] but received {} arguments\n", static_cast<uint16_t>(ctx.pCommand->minArgs), static_cast<uint16_t>(ctx.pCommand->maxArgs), ctx.args.arguments.size());
+			ns::printf(ns::ERROR, "Expected arguments between [{}, {}] but received {} arguments\n", (uint16_t)(ctx.pCommand->minArgs), (uint16_t)(ctx.pCommand->maxArgs), ctx.args.arguments.size());
 
 		ns::printf(ns::ECHO, "{} {}\n", ctx.pCommand->name, ctx.pCommand->getArgumentsNames());
 		clearStatementData(ctx);
@@ -126,7 +126,7 @@ void ns::handleCommandCall(NikiContext* pCtx, ProgramVariable*& pProgramVar) {
 
 uint8_t ns::handleIdentifierToken(NikiContext* pCtx, ProgramVariable*& pProgramVar, uint8_t printError) {
 	if (ctx.pLexer->token.value.empty()) {
-		ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+		ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 		return 1;
 	}
 
@@ -134,7 +134,7 @@ uint8_t ns::handleIdentifierToken(NikiContext* pCtx, ProgramVariable*& pProgramV
 		if (canRunVariable(ctx))
 			return 2;
 
-		ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+		ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 		return 0;
 
 	} else if (ctx.programVariables.count(ctx.pLexer->token.value) != 0) {
@@ -147,13 +147,13 @@ uint8_t ns::handleIdentifierToken(NikiContext* pCtx, ProgramVariable*& pProgramV
 		if (ctx.pCommand == nullptr) {
 			if (printError)
 				ns::printf(PrintLevel::ERROR, "Unknown identifier \"{}\"\n", ctx.pLexer->token.value);
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+			ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 			return 0;
 		} else
 			return 1;
 	}
 
-	return false;
+	return 0;
 }
 
 void ns::handleArgumentToken(NikiContext* pCtx, uint8_t printError) {
@@ -174,7 +174,7 @@ void ns::handleArgumentToken(NikiContext* pCtx, uint8_t printError) {
 		if (printError)
 			ns::printf(ns::ERROR, "Expected 0 arguments for {} command\n", ctx.pCommand->name);
 		clearStatementData(ctx);
-		ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+		ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 		return;
 	}
 
@@ -192,7 +192,7 @@ void ns::handleArgumentToken(NikiContext* pCtx, uint8_t printError) {
 			if (printError)
 				ns::printf(PrintLevel::ERROR, "{} -> Type not matched: expected (i)nteger number\n", arg);
 			clearStatementData(ctx);
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+			ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 			return;
 		}
 		break;
@@ -204,7 +204,7 @@ void ns::handleArgumentToken(NikiContext* pCtx, uint8_t printError) {
 			if (printError)
 				ns::printf(PrintLevel::ERROR, "{} -> Type not matched: expected (d)ecimal number\n", arg);
 			clearStatementData(ctx);
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+			ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 			return;
 		}
 		break;
@@ -217,7 +217,7 @@ void ns::handleArgumentToken(NikiContext* pCtx, uint8_t printError) {
 			if (printError)
 				ns::printf(PrintLevel::ERROR, "{} -> Type not matched: expected (v)ariable\n", arg);
 			clearStatementData(ctx);
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+			ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 			return;
 		}
 		break;
@@ -246,7 +246,7 @@ void ns::handleConsoleVariableCall(NikiContext* pCtx, ProgramVariable*& pProgram
 		case NIKI_TOKEN_IDENTIFIER:
 			if (handleIdentifierToken(ctx, pProgramVar, printError) == 2) {
 				if (ctx.maxConsoleVariablesRecursiveDepth != 0 && tempLexers.size() >= ctx.maxConsoleVariablesRecursiveDepth) {
-					ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+					ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 					break;
 				}
 
@@ -279,7 +279,7 @@ void ns::handleConsoleVariableCall(NikiContext* pCtx, ProgramVariable*& pProgram
 				ctx.origin &= ~NIKI_ORIGIN_VARIABLE_IN_VARIABLE;
 
 			ctx.pLexer = &tempLexers.back();
-			ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+			ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 		}
 	}
 
@@ -315,7 +315,7 @@ void ns::parse(NikiContext* pCtx, uint8_t printError) {
 			uint8_t result = handleIdentifierToken(ctx, pProgramVar, printError);
 			if (result == 2) {
 				handleConsoleVariableCall(ctx, pProgramVar, printError);
-				ctx.pLexer->advanceUntil(static_cast<uint8_t>(NIKI_TOKEN_EOS));
+				ctx.pLexer->advanceUntil((uint8_t)>(NIKI_TOKEN_EOS));
 			} else if (result == 1)
 				ctx.pLexer->advance();
 			break;
@@ -346,7 +346,7 @@ uint8_t ns::parseFile(NikiContext* pCtx, const char* filePath, uint8_t printErro
 	if (!file) {
 		if (printError)
 			printf(PrintLevel::ERROR, "Could not load file \"{}\"\n", filePath);
-		return false;
+		return 0;
 	}
 
 	uint8_t runningFromAnotherFile = (ctx.origin & NIKI_ORIGIN_FILE);
@@ -387,5 +387,5 @@ uint8_t ns::parseFile(NikiContext* pCtx, const char* filePath, uint8_t printErro
 	if (!runningFromAnotherFile)
 		ctx.origin &= ~NIKI_ORIGIN_FILE;
 
-	return true;
+	return 1;
 }

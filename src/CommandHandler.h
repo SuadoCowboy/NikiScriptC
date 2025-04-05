@@ -24,7 +24,7 @@ NikiCommand* nikiGetCommand(const NikiCommands* pCommands, sds name);
 /**
  * @brief adds command to commands unordered_map
  * @param command name of the will be mapped in the commands variable
- * @return true if command name is okay
+ * @return 1 if command name is okay
  * @return 0 if command with this name already exists
  */
 uint8_t nikiAddCommand(NikiCommands* pCommands, const NikiCommand* pCommand);

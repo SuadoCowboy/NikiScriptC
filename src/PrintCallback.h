@@ -21,5 +21,5 @@ typedef void(*NikiPrintCallback)(void* pData, struct NikiContext* pCtx, NikiPrin
 NIKIAPI void nikiPrintf(NikiPrintLevel level, const sds format, ...);
 
 NIKIAPI void nikiSetPrintCallback(void* pData, PrintCallback callback);
-NIKIAPI void nikiPrint(const PrintLevel& level, const sds& str);
-NIKIAPI void nikiPrintUnknownCommand(const sds& command);
+NIKIAPI void nikiPrint(const PrintLevel& level, const sds str);
+NIKIAPI void nikiPrintUnknownCommand(const sds command);

@@ -83,7 +83,7 @@ NIKIAPI void trim(sds s);
 /**
  * @brief call isspace but does not accept newline
  * @param c char to check if is space
- * @return true if is space
- * @return false if is not space
+ * @return 1 if is space
+ * @return 0 if is not space
  */
 NIKIAPI uint8_t isSpaceNotNewline(char c);

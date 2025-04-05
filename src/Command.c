@@ -10,7 +10,7 @@ NikiCommand_init(NikiCommand* pCommand, const sds name, unsigned char minArgs, u
 	assert(argsDescriptions.size() % 2 == 0);
 	assert(argsDescriptions.size() / 2 == maxArgs);
 
-	uint8_t isName = true;
+	uint8_t isName = 1;
 	for (uint8_t i = 0; i < argsDescriptions.size(); ++i) {
 		const sds_view& arg = argsDescriptions[i];
 
@@ -33,7 +33,7 @@ sds ns::Command::getArgumentsNames() {
 		return "";
 
 	sdsstream oss{};
-	uint8_t isName = true;
+	uint8_t isName = 1;
 
 	for (uint64_t i = 0; i < argsDescriptions.size(); ++i) {
 		if (isName)
@@ -51,7 +51,7 @@ sds ns::Command::getArgumentsNames() {
 void ns::Command::printAsDataTree() {
 	sdsstream descriptions{};
 	sdsstream usage{};
-	uint8_t isName = true;
+	uint8_t isName = 1;
 
 	usage << "- Usage: " << name << ' ';
 	descriptions << "- Description: " << description << "\n- Arguments:\n";

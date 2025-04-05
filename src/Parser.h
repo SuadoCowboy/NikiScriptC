@@ -80,7 +80,7 @@ namespace ns {
 	 * @brief Parses and interpret scripts: handles commands and variables as well as their arguments
 	 * @param ctx
 	 */
-	NIKIAPI void parse(NikiContext* pCtx, uint8_t printError=true);
+	NIKIAPI void parse(NikiContext* pCtx, uint8_t printError=1);
 
 	NIKIAPI uint8_t parseFile(NikiContext* pCtx, const char* filePath, uint8_t printError);
 }

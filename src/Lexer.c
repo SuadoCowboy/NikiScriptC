@@ -3,37 +3,37 @@
 #include "Utils.h"
 
 void nikiLexerAdvance(NikiLexer* pLexer) {
-	nikiReferencesClear(pLexer->token.references)
+	nikiReferencesClear(pLexer->token.references);
 
 	while (pLexer->position < pLexer->inputSize && isSpaceNotNewline(pLexer->input[pLexer->position]))
 		++pLexer->position;
 
 	if (pLexer->position >= pLexer->inputSize) {
-		token.type = NIKI_TOKEN_END;
-		token.value = "";
+		pLexer->token.type = NIKI_TOKEN_END;
+		pLexer->token.value = "";
 		return;
 	}
 
 	if (pLexer->input[pLexer->position] == '\n')
-		lineIndex++;
+		pLexer->lineIndex++;
 
-	uint64_t nextTokenPosition = nikiLexerSetTokenValue();
-	nikiLexerSetTokenType();
+	NIKI_LEXER_INPUT_SIZE_TYPE nextTokenPosition = nikiLexerSetTokenValue(pLexer);
+	nikiLexerSetTokenType(pLexer);
 
 	pLexer->position = nextTokenPosition;
 }
 
 void nikiLexerAdvanceUntil(NikiLexer* pLexer, uint8_t flags) {
-	flags |= static_cast<uint8_t>(NIKI_TOKEN_END);
+	flags |= (uint8_t)NIKI_TOKEN_END;
 
 	advance();
-	while (!(flags & token.type))
+	while (!(flags & pLexer->token.type))
 		advance();
 }
 
 NIKI_LEXER_INPUT_SIZE_TYPE nikiLexerSetTokenValue(NikiLexer* pLexer) {
 	if (pLexer->input[pLexer->position] == NIKI_STATEMENT_SEPARATOR || pLexer->input[pLexer->position] == '\n') {
-		token.value = NIKI_STATEMENT_SEPARATOR;
+		pLexer->token.value = NIKI_STATEMENT_SEPARATOR;
 		return pLexer->position+1;
 	}
 
@@ -50,7 +50,7 @@ NIKI_LEXER_INPUT_SIZE_TYPE nikiLexerSetTokenValue(NikiLexer* pLexer) {
 	while (nextTokenPosition < pLexer->inputSize && (pLexer->position == nextTokenPosition || ((!isSpaceNotNewline(pLexer->input[nextTokenPosition]) && (pLexer->input[nextTokenPosition] != NIKI_STATEMENT_SEPARATOR || (flags & 2))) || (flags & 1)))) {
 		if (flags & 2) {
 			flags &= ~2;
-			result = sdscat(result, pLexer->input[nextTokenPosition++]);
+			result = sdscatlen(result, pLexer->input[nextTokenPosition++], 1);
 			continue;
 		}
 
@@ -88,24 +88,24 @@ NIKI_LEXER_INPUT_SIZE_TYPE nikiLexerSetTokenValue(NikiLexer* pLexer) {
 		}
 
 		if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_OPEN) {
-			if (token.type == NIKI_TOKEN_NONE || ((NIKI_TOKEN_EOS|NIKI_TOKEN_END) & token.type))
+			if (pLexer->token.type == NIKI_TOKEN_NONE || ((NIKI_TOKEN_EOS|NIKI_TOKEN_END) & pLexer->token.type))
 				break;
 
-			++openArguments;
+			++pLexer->openArguments;
 			flags |= 1;
 
-			if (openArguments == 1) {
+			if (pLexer->openArguments == 1) {
 				++nextTokenPosition;
 				continue;
 			}
 
-		} else if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_SEPARATOR && openArguments == 1) {
+		} else if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_SEPARATOR && pLexer->openArguments == 1) {
 			++nextTokenPosition;
 			break;
 
-		} else if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_CLOSE && openArguments != 0) {
-			--openArguments;
-			if (openArguments == 0) {
+		} else if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_CLOSE && pLexer->openArguments != 0) {
+			--pLexer->openArguments;
+			if (pLexer->openArguments == 0) {
 				++nextTokenPosition;
 				break;
 			}
@@ -119,28 +119,30 @@ NIKI_LEXER_INPUT_SIZE_TYPE nikiLexerSetTokenValue(NikiLexer* pLexer) {
 		} else if (pLexer->input[nextTokenPosition] == NIKI_REFERENCE && nextTokenPosition+1 < pLexer->inputSize && pLexer->input[nextTokenPosition+1] == NIKI_REFERENCE_OPEN) {
 			sds reference;
 
-			uint64_t tempIndex = nextTokenPosition+2;
-			
-			uint8_t foundCloseReference = false;
+			NIKI_LEXER_INPUT_SIZE_TYPE tempIndex = nextTokenPosition+2;
+
+			uint8_t foundCloseReference = 0;
 			for (; tempIndex < pLexer->inputSize && !isSpaceNotNewline(pLexer->input[tempIndex]); ++tempIndex) {
 				if (pLexer->input[tempIndex] == NIKI_REFERENCE_CLOSE) {
 					++tempIndex;
-					foundCloseReference = true;
+					foundCloseReference = 1;
 					break;
 				}
 
-				reference << pLexer->input[tempIndex];
+				reference = sdscatlen(reference, pLexer->input[tempIndex], 1);
 			}
 
 			if (foundCloseReference) {
-				nikiReferencesPush(sdslen(result), reference.str())
+				nikiReferencesPush(sdslen(result), reference);
 				nextTokenPosition = tempIndex;
 				continue;
-			}
-		
+			} else
+				sdsfree(reference);
+				reference = NULL;
+
 		} else if (pLexer->input[nextTokenPosition] == NIKI_ARGUMENTS_QUOTE && pLexer->openArguments == 0) {
 			++nextTokenPosition;
-			
+
 			if (flags & 1) {
 				flags &= ~1;
 				break;
@@ -150,28 +152,34 @@ NIKI_LEXER_INPUT_SIZE_TYPE nikiLexerSetTokenValue(NikiLexer* pLexer) {
 			}
 		}
 
-		result = sdscat(result, pLexer->input[nextTokenPosition++]);
+		result = sdscatlen(result, pLexer->input[nextTokenPosition++], 1);
 	}
 
-	token.value = result.str();
+	pLexer->token.value = result;
 	return nextTokenPosition;
 }
 
 void nikiLexerSetTokenType(NikiLexer* pLexer) {
-	if (!token.value.empty() && token.value[0] == NIKI_STATEMENT_SEPARATOR) {
-		token.type = NIKI_TOKEN_EOS;
+	if (sdslen(pLexer->token.value) != 0 && pLexer->token.value[0] == NIKI_STATEMENT_SEPARATOR) {
+		pLexer->token.type = NIKI_TOKEN_EOS;
 
-	} else if (token.type == NIKI_TOKEN_NONE || ((NIKI_TOKEN_EOS|NIKI_TOKEN_END) & token.type)) { // if the lexer just started and is not EOS
-		token.type = NIKI_TOKEN_IDENTIFIER;
+	} else if (pLexer->token.type == NIKI_TOKEN_NONE || ((NIKI_TOKEN_EOS|NIKI_TOKEN_END) & pLexer->token.type)) { // if the lexer just started and is not EOS
+		pLexer->token.type = NIKI_TOKEN_IDENTIFIER;
 
-	} else if ((NIKI_TOKEN_IDENTIFIER|NIKI_TOKEN_ARGUMENT) & token.type)
-		token.type = NIKI_TOKEN_ARGUMENT;
+	} else if ((NIKI_TOKEN_IDENTIFIER|NIKI_TOKEN_ARGUMENT) & pLexer->token.type)
+		pLexer->token.type = NIKI_TOKEN_ARGUMENT;
 }
 
 void nikiLexerClear(NikiLexer* pLexer) {
-	pLexer->input.clear();
+	sdsfree(pLexer->input);
+	pLexer->input = NULL;
+
 	pLexer->position = 0;
-	token = {NIKI_TOKEN_NONE};
-	openArguments = 0;
-	lineIndex = 0;
+
+	sdsfree(pLexer->token.value);
+	nikiReferencesClear(pLexer->token.references);
+	pLexer->token.type = NIKI_TOKEN_NONE;
+
+	pLexer->openArguments = 0;
+	pLexer->lineIndex = 0;
 }

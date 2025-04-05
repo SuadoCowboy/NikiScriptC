@@ -60,9 +60,9 @@ static void test_command(ns::NikiContext* pCtx) {
 	ns::parse(copy);
 }
 
-uint8_t running = false;
+uint8_t running = 0;
 static void quit_command(ns::NikiContext*) {
-	running = false;
+	running = 0;
 }
 
 int main(int, char**) {
@@ -119,7 +119,7 @@ int main(int, char**) {
 	long long uint128 = 0;
 	ns::registerVariable(ctx, "uint128", "", &uint128, ns::getNumber<long long>, ns::setUnsignedLongLong);
 
-	running = true;
+	running = 1;
 	while (running) {
 		sds input;
 

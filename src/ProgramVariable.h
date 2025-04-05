@@ -9,17 +9,12 @@
 
 #ifndef NIKI_PROGRAM_VARIABLES_SIZE_TYPE
 #define NIKI_PROGRAM_VARIABLES_SIZE_TYPE uint32_t
-#endif1
+#endif
 
-struct ProgramVariable;
-struct Context;
+typedef sds(*GetProgramVariableValue)(struct NikiContext* pCtx, struct NikiProgramVariable* pVar);
+typedef void(*SetProgramVariableValue)(struct NikiContext* pCtx, struct NikiProgramVariable* pVar, const sds str);
 
-typedef sds(*GetProgramVariableValue)(NikiContext* pCtx, ProgramVariable* pVar);
-typedef void(*SetProgramVariableValue)(NikiContext* pCtx, ProgramVariable* pVar, const sds str);
-
-struct Context;
-
-typedef struct NIKIAPI ProgramVariable {
+typedef struct NIKIAPI NikiProgramVariable {
 	void* pValue;
 	sds description;
 
@@ -32,13 +27,8 @@ typedef struct NIKIAPI NikiProgramVariables {
 	NIKI_PROGRAM_VARIABLES_SIZE_TYPE size;
 } NikiProgramVariables;
 
-NIKIAPI sds getString(NikiContext*, NikiProgramVariable* pVar);
-NIKIAPI void setString(NikiContext*, NikiProgramVariable* pVar, const sds& str);
-
-template<typename T>
-sds getNumber(NikiContext*, ProgramVariable* pVar) {
-	return std::to_string(*static_cast<T*>(pVar->pValue));
-}
+NIKIAPI sds nikiProgramVariableGetString(struct NikiContext*, NikiProgramVariable* pVar);
+NIKIAPI void nikiProgramVariableSetString(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
 
 /**
  * @brief uses std::stoul so any number below that can be used
@@ -48,14 +38,14 @@ sds getNumber(NikiContext*, ProgramVariable* pVar) {
  * @param str
  */
 
-NIKIAPI void setUnsignedLongLong(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void nikiProgramVariableSetUnsignedLongLong(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
 
-NIKIAPI void setFloat(NikiContext*, ProgramVariable* pVar, const sds& str);
-NIKIAPI void setDouble(NikiContext*, ProgramVariable* pVar, const sds& str);
-NIKIAPI void setLongDouble(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void nikiProgramVariableSetFloat(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
+NIKIAPI void nikiProgramVariableSetDouble(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
+NIKIAPI void nikiProgramVariableSetLongDouble(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
 
-NIKIAPI void setChar(NikiContext*, ProgramVariable* pVar, const sds& str);
-NIKIAPI void setShort(NikiContext*, ProgramVariable* pVar, const sds& str);
-NIKIAPI void setInteger(NikiContext*, ProgramVariable* pVar, const sds& str);
-NIKIAPI void setLong(NikiContext*, ProgramVariable* pVar, const sds& str);
-NIKIAPI void setLongLong(NikiContext*, ProgramVariable* pVar, const sds& str);
+NIKIAPI void nikiProgramVariableSetChar(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
+NIKIAPI void nikiProgramVariableSetShort(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
+NIKIAPI void nikiProgramVariableSetInteger(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
+NIKIAPI void nikiProgramVariableSetLong(struct NikiContext*, NikiProgramVariable* pVar, const sds str);
+NIKIAPI void nikiProgramVariableSetLongLong(struct NikiContext*, NikiProgramVariable* pVar, const sds str);

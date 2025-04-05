@@ -8,11 +8,11 @@ ns::Command* ns::CommandHandler::get(const sds_view& name) {
 
 uint8_t ns::CommandHandler::add(const Command& command) {
 	if (commands.count(command.name) != 0)
-		return false;
+		return 0;
 
 	commands[command.name] = command;
 
-	return true;
+	return 1;
 }
 
 void ns::CommandHandler::remove(const sds_view& name, NikiContext* pCtx) {

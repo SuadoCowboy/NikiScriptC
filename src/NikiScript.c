@@ -178,7 +178,7 @@ void nikiToggle_command(NikiNikiContext* pCtx) {
 }
 
 void nikiExec_command(NikiContext* pCtx) {
-	parseFile(ctx, ctx.args.getString(0).c_str(), true);
+	parseFile(ctx, ctx.args.getString(0).c_str(), 1);
 }
 
 void nikiIncrementvar_command(NikiContext* pCtx) {
